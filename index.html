@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>協力募集画像ツール（最終版）</title>
+  <title>ラッキー傭兵団 募集画像作成ツール</title>
   <style>
     body {
       font-family: sans-serif;
@@ -34,6 +34,25 @@
       gap: 5px;
     }
   </style>
+
+    <style>
+      #canvasPreview, #printArea {
+        transition: opacity 0.3s ease;
+      }
+      .hidden {
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        z-index: -1;
+      }
+      .visible {
+        opacity: 1;
+        pointer-events: auto;
+        position: static;
+        z-index: 0;
+      }
+    </style>
+
 </head>
 <body>
   <div class="section">
@@ -127,9 +146,10 @@
   </div>
   <button id="generateBtn">作成する画像を確認(下に表示)</button>
 
-  <button id="saveImageBtn">画像保存</button>
+  <button id="saveImageBtn">下のテキストを画像化</button>
 
-  <div id="printArea"></div>
+  <div id="modeLabel" class="row" style="font-size: 0.9em; color: #666; margin-bottom: 4px;">現在表示中：テキスト状態</div>
+<div id="printArea" class="visible"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
@@ -139,13 +159,92 @@
       scale: 2,
       backgroundColor: "#ffffff"
     }).then(canvas => {
-      const link = document.createElement("a");
-      link.download = "recruit_ui_output.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      const existing = document.getElementById("canvasPreview");
+      if (existing) existing.remove();
+      canvas.id = "canvasPreview"; canvas.classList.add("visible");
+      canvas.style.marginTop = "20px";
+      document.getElementById("saveImageBtn").style.display = "none";
+      target.classList.remove("visible"); target.classList.add("hidden");
+      document.getElementById("modeLabel").textContent = "現在表示中：画像(長押しで保存)";
+      target.parentNode.insertBefore(canvas, target.nextSibling);
     });
   });
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const generateBtn = document.getElementById("generateBtn");
+  // ボタンを非表示にする
+  if (generateBtn) {
+    generateBtn.style.display = "none";
+    setTimeout(() => generateBtn.click(), 1000); // 1秒後にクリック
+}
+
+  // 入力があればボタンクリックを呼び出す
+  const autoTriggerElements = document.querySelectorAll("input, select, textarea");
+  autoTriggerElements.forEach(el => {
+    el.addEventListener("input", () => { 
+  const printArea = document.getElementById("printArea");
+  const canvasPreview = document.getElementById("canvasPreview");
+  if (canvasPreview) canvasPreview.remove();
+  if (canvasPreview) canvasPreview.remove();
+  if (printArea) {
+    printArea.classList.remove("hidden");
+    printArea.classList.add("visible");
+    document.getElementById("modeLabel").textContent = "現在表示中：テキスト状態";
+  }
+  document.getElementById("saveImageBtn").style.display = "inline-block";
+ generateBtn.click(); });
+    el.addEventListener("change", () => { 
+  const printArea = document.getElementById("printArea");
+  const canvasPreview = document.getElementById("canvasPreview");
+  if (canvasPreview) canvasPreview.remove();
+  if (canvasPreview) canvasPreview.remove();
+  if (printArea) {
+    printArea.classList.remove("hidden");
+    printArea.classList.add("visible");
+    document.getElementById("modeLabel").textContent = "現在表示中：テキスト状態";
+  }
+  document.getElementById("saveImageBtn").style.display = "inline-block";
+ generateBtn.click(); });
+  });
+
+  // クリア数提示スライダーが生成されたときにも再バインド
+  const clearTextMap = ["未クリア", "50↓", "500↓", "2000↓", "数えるのをやめた"];
+  const clearOrder = ["ノマ", "ハド", "地獄", "神"];
+  const container = document.getElementById("clearSliders");
+
+  document.querySelectorAll(".clearMode").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const id = cb.dataset.id;
+      const existing = document.getElementById("slider-" + id);
+      if (cb.checked && !existing) {
+        const wrap = document.createElement("div");
+        wrap.className = "row";
+        wrap.id = "slider-" + id;
+        wrap.innerHTML = `・${id}（<input type="range" min="0" max="4" value="0" data-id="${id}" class="clearSlider"> <span id="label-${id}">未クリア</span>）`;
+        container.appendChild(wrap);
+
+        const slider = wrap.querySelector("input.clearSlider");
+        slider.addEventListener("input", () => {
+          document.getElementById("label-" + id).textContent = clearTextMap[slider.value];
+          generateBtn.click(); // 動的反映
+        });
+
+        const elements = clearOrder.map(mode => document.getElementById("slider-" + mode)).filter(el => el);
+        container.innerHTML = "";
+        elements.forEach(el => container.appendChild(el));
+
+        generateBtn.click(); // 初回反映
+      } else if (!cb.checked && existing) {
+        existing.remove();
+        generateBtn.click();
+      }
+    });
+  });
+});
+</script>
+
 </body>
 </html>
 
@@ -267,7 +366,7 @@
 </script>
 
   <div style="margin-top: 18px; font-size: 0.8em; text-align: center; color: #666;">
-    ※このWebアプリの使用により発生したいかなる損害・不利益についても、作者は一切の責任を負いません。
+    ※このWebアプリの使用により発生したいかなる損害・不利益についても、作者(Menbo)は一切の責任を負いません。
   </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -278,12 +377,91 @@
       scale: 2,
       backgroundColor: "#ffffff"
     }).then(canvas => {
-      const link = document.createElement("a");
-      link.download = "recruit_ui_output.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      const existing = document.getElementById("canvasPreview");
+      if (existing) existing.remove();
+      canvas.id = "canvasPreview"; canvas.classList.add("visible");
+      canvas.style.marginTop = "20px";
+      document.getElementById("saveImageBtn").style.display = "none";
+      target.classList.remove("visible"); target.classList.add("hidden");
+      document.getElementById("modeLabel").textContent = "現在表示中：画像(長押しで保存)";
+      target.parentNode.insertBefore(canvas, target.nextSibling);
     });
   });
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const generateBtn = document.getElementById("generateBtn");
+  // ボタンを非表示にする
+  if (generateBtn) {
+    generateBtn.style.display = "none";
+    setTimeout(() => generateBtn.click(), 1000); // 1秒後にクリック
+}
+
+  // 入力があればボタンクリックを呼び出す
+  const autoTriggerElements = document.querySelectorAll("input, select, textarea");
+  autoTriggerElements.forEach(el => {
+    el.addEventListener("input", () => { 
+  const printArea = document.getElementById("printArea");
+  const canvasPreview = document.getElementById("canvasPreview");
+  if (canvasPreview) canvasPreview.remove();
+  if (canvasPreview) canvasPreview.remove();
+  if (printArea) {
+    printArea.classList.remove("hidden");
+    printArea.classList.add("visible");
+    document.getElementById("modeLabel").textContent = "現在表示中：テキスト状態";
+  }
+  document.getElementById("saveImageBtn").style.display = "inline-block";
+ generateBtn.click(); });
+    el.addEventListener("change", () => { 
+  const printArea = document.getElementById("printArea");
+  const canvasPreview = document.getElementById("canvasPreview");
+  if (canvasPreview) canvasPreview.remove();
+  if (canvasPreview) canvasPreview.remove();
+  if (printArea) {
+    printArea.classList.remove("hidden");
+    printArea.classList.add("visible");
+    document.getElementById("modeLabel").textContent = "現在表示中：テキスト状態";
+  }
+  document.getElementById("saveImageBtn").style.display = "inline-block";
+ generateBtn.click(); });
+  });
+
+  // クリア数提示スライダーが生成されたときにも再バインド
+  const clearTextMap = ["未クリア", "50↓", "500↓", "2000↓", "数えるのをやめた"];
+  const clearOrder = ["ノマ", "ハド", "地獄", "神"];
+  const container = document.getElementById("clearSliders");
+
+  document.querySelectorAll(".clearMode").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const id = cb.dataset.id;
+      const existing = document.getElementById("slider-" + id);
+      if (cb.checked && !existing) {
+        const wrap = document.createElement("div");
+        wrap.className = "row";
+        wrap.id = "slider-" + id;
+        wrap.innerHTML = `・${id}（<input type="range" min="0" max="4" value="0" data-id="${id}" class="clearSlider"> <span id="label-${id}">未クリア</span>）`;
+        container.appendChild(wrap);
+
+        const slider = wrap.querySelector("input.clearSlider");
+        slider.addEventListener("input", () => {
+          document.getElementById("label-" + id).textContent = clearTextMap[slider.value];
+          generateBtn.click(); // 動的反映
+        });
+
+        const elements = clearOrder.map(mode => document.getElementById("slider-" + mode)).filter(el => el);
+        container.innerHTML = "";
+        elements.forEach(el => container.appendChild(el));
+
+        generateBtn.click(); // 初回反映
+      } else if (!cb.checked && existing) {
+        existing.remove();
+        generateBtn.click();
+      }
+    });
+  });
+});
+</script>
+
 </body>
 </html>
